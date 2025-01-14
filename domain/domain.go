@@ -13,7 +13,7 @@ type MembersDomain interface {
 
 	AuthMember(c context.Context, memberData entities.UserBase) (jwt string, err error)
 
-	GetMemberById(c context.Context, id int) (member entities.Member, err error)
+	GetMemberByID(c context.Context, id int) (member entities.Member, err error)
 	GetMembersPaginated(c context.Context, offset, limit int) (members []entities.MemberPublic, err error)
 	GetTotalMembers(c context.Context) (total int64, err error)
 

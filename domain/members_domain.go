@@ -60,8 +60,8 @@ func (md *membersDomain) AuthMember(c context.Context, memberData entities.UserB
 	return
 }
 
-func (md *membersDomain) GetMemberById(c context.Context, id int) (member entities.Member, err error) {
-	memberModel, err := md.membersPort.GetMemberById(c, id)
+func (md *membersDomain) GetMemberByID(c context.Context, id int) (member entities.Member, err error) {
+	memberModel, err := md.membersPort.GetMemberByID(c, id)
 	if err != nil {
 		return
 	}
