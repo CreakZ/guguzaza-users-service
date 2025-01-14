@@ -76,23 +76,23 @@ func (mr *membersRepository) RegisterMember(c context.Context, memberData models
 	return id, nil
 }
 
-func (mr *membersRepository) GetMemberPasswordByNickname(c context.Context, nickname string) (password string, err error) {
+func (mr *membersRepository) GetMemberUserBaseByNickname(c context.Context, nickname string) (memberBase models.UserBase, err error) {
 	query, args, err := sq.
-		Select("password").
+		Select("nickname", "password", "member_uuid").
 		From("members").
 		Where(sq.Eq{"nickname": nickname}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
-		return "", err
+		return
 	}
 
 	row := mr.db.QueryRowContext(c, query, args...)
-	if err = row.Scan(&password); err != nil {
-		return "", err
+	if err = row.Scan(&memberBase.Nickname, &memberBase.Password, &memberBase.Uuid); err != nil {
+		return models.UserBase{}, err
 	}
 
-	return password, nil
+	return memberBase, nil
 }
 
 // change models.Member to models.MemberPublic
