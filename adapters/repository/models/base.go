@@ -1,5 +1,5 @@
 package models
 
 type UserBase struct {
-	Nickname, Password string
+	Nickname, Password, Uuid string
 }
