@@ -54,8 +54,8 @@ func (mr *membersRepository) RegisterMember(c context.Context, memberData models
 
 	query, args, err := sq.
 		Insert("members").
-		Columns("nickname", "password", "join_date", "sex", "about").
-		Values(memberData.Nickname, memberData.Password, memberData.JoinDate, memberData.Sex, memberData.About).
+		Columns("nickname", "password", "member_uuid", "join_date", "sex", "about").
+		Values(memberData.Nickname, memberData.Password, memberData.Uuid, memberData.JoinDate, memberData.Sex, memberData.About).
 		Suffix("RETURNING \"id\"").
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
@@ -95,9 +95,10 @@ func (mr *membersRepository) GetMemberPasswordByNickname(c context.Context, nick
 	return password, nil
 }
 
-func (mr *membersRepository) GetMemberById(c context.Context, id int) (member models.Member, err error) {
+// change models.Member to models.MemberPublic
+func (mr *membersRepository) GetMemberByID(c context.Context, id int) (member models.Member, err error) {
 	query, args, err := sq.
-		Select("id", "nickname", "join_date", "sex", "about").
+		Select("id", "nickname", "member_uuid", "join_date", "sex", "about"). // password is skipped intentionally
 		From("members").
 		Where(sq.Eq{"id": id}).
 		PlaceholderFormat(sq.Dollar).
@@ -107,7 +108,7 @@ func (mr *membersRepository) GetMemberById(c context.Context, id int) (member mo
 	}
 
 	row := mr.db.QueryRowContext(c, query, args...)
-	err = row.Scan(&member.ID, &member.Nickname, &member.JoinDate, &member.Sex, &member.About)
+	err = row.Scan(&member.ID, &member.Nickname, &member.Uuid, &member.JoinDate, &member.Sex, &member.About)
 	if err != nil {
 		return models.Member{}, err
 	}
@@ -115,9 +116,28 @@ func (mr *membersRepository) GetMemberById(c context.Context, id int) (member mo
 	return member, nil
 }
 
+func (mr *membersRepository) GetMemberIDByUuid(c context.Context, uuid string) (id int, err error) {
+	query, args, err := sq.
+		Select("id").
+		From("members").
+		Where(sq.Eq{"member_uuid": uuid}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return 0, err
+	}
+
+	row := mr.db.QueryRowContext(c, query, args...)
+	if err = row.Scan(&id); err != nil {
+		return 0, err
+	}
+
+	return id, nil
+}
+
 func (mr *membersRepository) GetMembersPaginated(c context.Context, offset, limit int) (members []models.MemberPublic, err error) {
 	query, args, err := sq.
-		Select("id", "nickname", "join_date", "sex", "about").
+		Select("id", "nickname", "member_uuid", "join_date", "sex", "about").
 		From("members").
 		Limit(uint64(limit)).
 		Offset(uint64(offset)).
@@ -133,7 +153,7 @@ func (mr *membersRepository) GetMembersPaginated(c context.Context, offset, limi
 
 	member := models.MemberPublic{}
 	for rows.Next() {
-		err = rows.Scan(&member.ID, &member.Nickname, &member.JoinDate, &member.Sex, &member.About)
+		err = rows.Scan(&member.ID, &member.Nickname, &member.Uuid, &member.JoinDate, &member.Sex, &member.About)
 		if err != nil {
 			return []models.MemberPublic{}, err
 		}

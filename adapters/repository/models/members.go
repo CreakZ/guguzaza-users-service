@@ -14,8 +14,8 @@ type Member struct {
 }
 
 type MemberPublic struct {
-	ID         int
-	Nickname   string
-	JoinDate   time.Time
-	Sex, About string
+	ID             int
+	Nickname, Uuid string
+	JoinDate       time.Time
+	Sex, About     string
 }
