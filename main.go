@@ -1,9 +1,12 @@
 package main
 
 import (
+	"crypto/rand"
 	"database/sql"
 	"fmt"
+	"guguzaza-users/adapters/tokens"
 	"guguzaza-users/http/routing"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -20,7 +23,15 @@ func main() {
 		panic(err)
 	}
 
-	routing.InitRouting(e, db)
+	key := make([]byte, 32)
+	_, err = rand.Read(key)
+	if err != nil {
+		panic(fmt.Sprintf("Ошибка генерации ключа: %v", err))
+	}
+
+	jwtUtil := tokens.NewJwtUtil(time.Second*10, key)
+
+	routing.InitRouting(e, db, jwtUtil)
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{}))
 
