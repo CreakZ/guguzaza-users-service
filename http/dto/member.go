@@ -1,18 +1,26 @@
 package dto
 
-import "time"
-
 type MemberCreate struct {
-	UserBase
-	Sex   string `json:"sex"`
-	About string `json:"about"`
+	Nickname string `json:"nickname"`
+	Password string `json:"password"`
+	Sex      string `json:"sex"`
+	About    string `json:"about"`
 }
 
 type MemberBase struct {
 	UserBase
-	JoinTime time.Time `json:"joinTime"`
-	Sex      string    `json:"sex"`
-	About    string    `json:"about"`
+	JoinTime JoinTime `json:"joinTime"`
+	Sex      string   `json:"sex"`
+	About    string   `json:"about"`
+}
+
+type MemberPublic struct {
+	ID       int      `json:"id"`
+	Nickname string   `json:"nickname"`
+	Uuid     string   `json:"uuid"`
+	JoinTime JoinTime `json:"joinTime"`
+	Sex      string   `json:"sex"`
+	About    string   `json:"about"`
 }
 
 type Member struct {
