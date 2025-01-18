@@ -96,7 +96,7 @@ func (mr *membersRepository) GetMemberUserBaseByNickname(c context.Context, nick
 }
 
 // change models.Member to models.MemberPublic
-func (mr *membersRepository) GetMemberByID(c context.Context, id int) (member models.Member, err error) {
+func (mr *membersRepository) GetMemberByID(c context.Context, id int) (member models.MemberPublic, err error) {
 	query, args, err := sq.
 		Select("id", "nickname", "member_uuid", "join_date", "sex", "about"). // password is skipped intentionally
 		From("members").
@@ -110,7 +110,7 @@ func (mr *membersRepository) GetMemberByID(c context.Context, id int) (member mo
 	row := mr.db.QueryRowContext(c, query, args...)
 	err = row.Scan(&member.ID, &member.Nickname, &member.Uuid, &member.JoinDate, &member.Sex, &member.About)
 	if err != nil {
-		return models.Member{}, err
+		return models.MemberPublic{}, err
 	}
 
 	return member, nil
@@ -167,7 +167,7 @@ func (mr *membersRepository) GetMembersPaginated(c context.Context, offset, limi
 	return members, nil
 }
 
-func (mr *membersRepository) GetTotalMembers(c context.Context) (total int, err error) {
+func (mr *membersRepository) GetTotalMembers(c context.Context) (total int64, err error) {
 	row := mr.db.QueryRowContext(c, "SELECT COUNT(*) FROM members")
 	if err = row.Scan(&total); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
