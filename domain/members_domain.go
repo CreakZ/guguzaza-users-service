@@ -8,17 +8,23 @@ import (
 	"guguzaza-users/domain/entities"
 	"guguzaza-users/domain/utils"
 	"guguzaza-users/domain/validation"
-	ports "guguzaza-users/ports/repository"
+	repo_ports "guguzaza-users/ports/repository"
+	token_ports "guguzaza-users/ports/tokens"
 	"time"
+
+	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type membersDomain struct {
-	membersPort ports.MembersRepositoryPort
+	membersPort repo_ports.MembersRepositoryPort
+	jwtUtil     token_ports.JwtUtilPort
 }
 
-func NewMembersDomain(membersPort ports.MembersRepositoryPort) MembersDomain {
+func NewMembersDomain(membersPort repo_ports.MembersRepositoryPort, jwtUtil token_ports.JwtUtilPort) MembersDomain {
 	return &membersDomain{
 		membersPort: membersPort,
+		jwtUtil:     jwtUtil,
 	}
 }
 
@@ -49,24 +55,33 @@ func (md *membersDomain) RegisterMember(c context.Context, memberData entities.M
 
 	memberDataCp := memberData
 	memberDataCp.Password = hashedPassword
+	memberDataCp.Uuid = uuid.NewString()
 
 	memberModel := converters.MemberBaseModelFromMemberCreate(memberDataCp, time.Now())
 
 	return md.membersPort.RegisterMember(c, memberModel)
 }
 
-// TODO
-func (md *membersDomain) AuthMember(c context.Context, memberData entities.UserBase) (jwt string, err error) {
-	return
+func (md *membersDomain) LoginMember(c context.Context, nickname, password string) (jwt string, err error) {
+	memberBase, err := md.membersPort.GetMemberUserBaseByNickname(c, nickname)
+	if err != nil {
+		return "", err
+	}
+
+	if err = bcrypt.CompareHashAndPassword([]byte(memberBase.Password), []byte(password)); err != nil {
+		return "", errors.New("неверный пароль")
+	}
+
+	return md.jwtUtil.CreateJwt(c, memberBase.Uuid)
 }
 
-func (md *membersDomain) GetMemberByID(c context.Context, id int) (member entities.Member, err error) {
+func (md *membersDomain) GetMemberByID(c context.Context, id int) (member entities.MemberPublic, err error) {
 	memberModel, err := md.membersPort.GetMemberByID(c, id)
 	if err != nil {
 		return
 	}
 
-	return converters.MemberFromEntityToModel(memberModel), nil
+	return converters.MemberPublicFromModelToEntity(memberModel), nil
 }
 
 func (md *membersDomain) GetMembersPaginated(c context.Context, offset, limit int) (members []entities.MemberPublic, err error) {
@@ -83,9 +98,8 @@ func (md *membersDomain) GetMembersPaginated(c context.Context, offset, limit in
 	return members, nil
 }
 
-// mocked right now
 func (md *membersDomain) GetTotalMembers(c context.Context) (total int64, err error) {
-	return 1337, nil
+	return md.membersPort.GetTotalMembers(c)
 }
 
 func (md *membersDomain) UpdateMember(c context.Context, id int, updateData entities.MemberUpdate) (err error) {

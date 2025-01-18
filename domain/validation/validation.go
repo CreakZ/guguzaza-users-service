@@ -3,66 +3,38 @@ package validation
 import (
 	"fmt"
 	"strings"
-	"unicode"
-
-	"golang.org/x/text/runes"
 )
 
-var (
-	latinSmallRt = &unicode.RangeTable{
-		R16: []unicode.Range16{
-			{Lo: 'a', Hi: 'z', Stride: 1},
-		},
-	}
+func isLatin(r rune) bool {
+	return (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z')
+}
 
-	latinCapitalRt = &unicode.RangeTable{
-		R16: []unicode.Range16{
-			{Lo: 'A', Hi: 'Z', Stride: 1},
-		},
-	}
+func isCyrillic(r rune) bool {
+	isSmall := r >= 'а' && r <= 'я'
+	isCapital := r >= 'А' && r <= 'Я'
+	isWeirdE := r == 'ё' || r == 'Ё' // 'ё' ('Ё') letter check :)
 
-	latinFullRt = &unicode.RangeTable{
-		R16: append(latinSmallRt.R16, latinCapitalRt.R16...),
-	}
+	return isSmall || isCapital || isWeirdE
+}
 
-	cyrillicRt = &unicode.RangeTable{
-		R16: []unicode.Range16{
-			{Lo: 0x0410, Hi: 0x042F, Stride: 1},
-			{Lo: 0x0430, Hi: 0x044F, Stride: 1},
-		},
-	}
-
-	specSymbolsRt = &unicode.RangeTable{
-		R16: []unicode.Range16{
-			{Lo: '+', Hi: '+', Stride: 1},
-			{Lo: '-', Hi: '-', Stride: 1},
-			{Lo: '_', Hi: '_', Stride: 1},
-			{Lo: ':', Hi: ':', Stride: 1},
-			{Lo: ';', Hi: ';', Stride: 1},
-			{Lo: '(', Hi: '(', Stride: 1},
-			{Lo: ')', Hi: ')', Stride: 1},
-		},
-	}
-
-	digitsRt = &unicode.RangeTable{
-		R16: []unicode.Range16{
-			{Lo: '0', Hi: '9', Stride: 1},
-		},
-	}
-
-	latinSmallSet  = runes.In(latinSmallRt)
-	latinFullSet   = runes.In(latinFullRt)
-	cyrillicSet    = runes.In(cyrillicRt)
-	specSymbolsSet = runes.In(specSymbolsRt)
-	digitsSet      = runes.In(digitsRt)
-)
+func isDigit(r rune) bool {
+	return r >= '0' && r <= '9'
+}
 
 // NICKNAME REQUIREMENTS:
 // Nickname should be 2 to 50 symbols long
-// and contain only latin, cyrillic and '+-_:;()' special symbols
+// and contain only latin, cyrillic and '+-=_:;().,' special symbols
 
+const nicknameSpecSymbols = "+-=_:;().,"
+
+func isNicknameSpecSymbol(r rune) bool {
+	return strings.ContainsRune(nicknameSpecSymbols, r)
+}
+
+// nicknameRequirementsFunc returns true if r breaks nickname requirements
 func nicknameRequirementsFunc(r rune) bool {
-	return latinFullSet.Contains(r) || cyrillicSet.Contains(r) || specSymbolsSet.Contains(r)
+	validRune := isLatin(r) || isCyrillic(r) || isDigit(r) || isNicknameSpecSymbol(r)
+	return !validRune
 }
 
 func CheckNicknameValidity(nickname string) (valid bool, errMsg string) {
@@ -70,8 +42,8 @@ func CheckNicknameValidity(nickname string) (valid bool, errMsg string) {
 		return false, fmt.Sprintf("длина никнейма должна составлять от 2 до 50 символов, длина текущего: %d", len(nickname))
 	}
 
-	valid = strings.ContainsFunc(nickname, nicknameRequirementsFunc)
-	if !valid {
+	invalid := strings.ContainsFunc(nickname, nicknameRequirementsFunc)
+	if invalid {
 		return false, "никнейм должен содержать только символы латиницы, кириллицы и символы из следующего набора: +-_:;()"
 	}
 
@@ -80,10 +52,18 @@ func CheckNicknameValidity(nickname string) (valid bool, errMsg string) {
 
 // PASSWORD REQUIREMENTS:
 // Password should be 8 to 50 symbols long
-// and contain only latin symbols, at least 1 of which is uppercase, and at least 1 digit
+// and contain only latin symbols, at least 1 digit
+// and at least 1 symbol from '!@_-='
+
+const passSpecSymbols = "!@_-="
+
+func isPassSpecSymbol(r rune) bool {
+	return strings.ContainsRune(passSpecSymbols, r)
+}
 
 func passwordRequirementsFunc(r rune) bool {
-	return latinSmallSet.Contains(r) || digitsSet.Contains(r)
+	validRune := isLatin(r) || isDigit(r) || isPassSpecSymbol(r)
+	return !validRune
 }
 
 func CheckPasswordValidity(password string) (valid bool, errMsg string) {
@@ -91,16 +71,63 @@ func CheckPasswordValidity(password string) (valid bool, errMsg string) {
 		return false, fmt.Sprintf("длина пароля должна составлять от 8 до 50 символов, длина текущего: %d", len(password))
 	}
 
-	if !strings.ContainsFunc(password, unicode.IsUpper) {
-		return false, "пароль должен содержать хотя бы одну заглавную латинскую букву"
+	var (
+		hasLatin      = false
+		hasDigit      = false
+		hasSpecSymbol = false
+	)
+
+	invalid := strings.ContainsFunc(password, passwordRequirementsFunc)
+	if invalid {
+		return false, "пароль должен содержать только латинские буквы, цифры и символы из набора: !@_-="
 	}
 
-	return strings.ContainsFunc(password, passwordRequirementsFunc), ""
+	for _, r := range password {
+		if isLatin(r) {
+			hasLatin = true
+		}
+		if isDigit(r) {
+			hasDigit = true
+		}
+		if isPassSpecSymbol(r) {
+			hasSpecSymbol = true
+		}
+	}
+
+	if !hasLatin {
+		return false, "пароль не содержит латинских символов"
+	}
+
+	if !hasDigit {
+		return false, "пароль не содержит цифры"
+	}
+
+	if !hasSpecSymbol {
+		return false, "пароль не содержит специальные символы из набора: !@_-="
+	}
+
+	return true, ""
 }
 
 // SEX REQUIREMENTS:
-// sex should be 'm' or 'f' char
+// sex should be "a" to "f" (lexicographically) string
 
-func CheckSexValidity(sex byte) bool {
-	return sex == 'm' || sex == 'f'
+func CheckSexValidity(sex string) (valid bool, errMsg string) {
+	switch sex {
+	case "a", "b", "c", "d", "e", "f":
+		return true, ""
+	default:
+		return false, fmt.Sprintf("неверное значение пола: %s", sex)
+	}
+}
+
+// ABOUT REQUIREMENTS:
+// about length should be less or equal than 100 characters
+
+func CheckAboutValidity(about string) (valid bool, errMsg string) {
+	if len(about) > 100 {
+		return false, fmt.Sprintf("длина поля \"О себе\" не должна превышать 100 символов, длина текущего: %d", len(about))
+	}
+
+	return true, ""
 }
