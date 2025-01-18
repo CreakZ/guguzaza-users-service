@@ -55,6 +55,7 @@ func MemberPublicFromEntityToModel(member entities.MemberPublic) models.MemberPu
 	return models.MemberPublic{
 		ID:       member.ID,
 		Nickname: member.Nickname,
+		Uuid:     member.Uuid,
 		JoinDate: member.JoinDate,
 		Sex:      member.Sex,
 		About:    member.About,
@@ -65,7 +66,19 @@ func MemberPublicFromModelToEntity(member models.MemberPublic) entities.MemberPu
 	return entities.MemberPublic{
 		ID:       member.ID,
 		Nickname: member.Nickname,
+		Uuid:     member.Uuid,
 		JoinDate: member.JoinDate,
+		Sex:      member.Sex,
+		About:    member.About,
+	}
+}
+
+func MemberPublicFromEntityToDto(member entities.MemberPublic) dto.MemberPublic {
+	return dto.MemberPublic{
+		ID:       member.ID,
+		Nickname: member.Nickname,
+		Uuid:     member.Uuid,
+		JoinTime: dto.JoinTime{Time: member.JoinDate},
 		Sex:      member.Sex,
 		About:    member.About,
 	}
@@ -87,9 +100,12 @@ func MemberUpdateEntityToUpdatesMap(member entities.MemberUpdate) map[string]int
 
 func MemberCreateFromDtoToEntity(member dto.MemberCreate) entities.MemberCreate {
 	return entities.MemberCreate{
-		UserBase: UserBaseFromDtoToEntity(member.UserBase),
-		Sex:      member.Sex,
-		About:    member.About,
+		UserBase: entities.UserBase{
+			Nickname: member.Nickname,
+			Password: member.Password,
+		},
+		Sex:   member.Sex,
+		About: member.About,
 	}
 }
 
