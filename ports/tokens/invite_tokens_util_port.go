@@ -1,11 +1,9 @@
 package ports
 
-import (
-	"context"
-)
+import "context"
 
-type InviteTokensRepositoryPort interface {
-	CreateToken(c context.Context, token string, positionID int) (err error)
+type InviteTokensUtilPort interface {
+	CreateToken(c context.Context, positionID int) (token string, err error)
 	LookupPositionID(c context.Context, token string) (positionID int, err error)
 	DeleteToken(c context.Context, token string) (err error)
 }

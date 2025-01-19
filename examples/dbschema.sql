@@ -24,5 +24,6 @@ CREATE TABLE IF NOT EXISTS admins (
 
 CREATE TABLE IF NOT EXISTS invite_tokens (
   id SERIAL PRIMARY KEY,
-  token VARCHAR(30)
+  token VARCHAR(30),
+  position_id INTEGER NOT NULL REFERENCES positions(id)
 );
