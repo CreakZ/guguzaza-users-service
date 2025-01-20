@@ -4,7 +4,8 @@ import "time"
 
 type AdminRegister struct {
 	UserBase
-	InviteToken string
+	PositionID int
+	JoinDate   time.Time
 }
 
 type Admin struct {
@@ -13,7 +14,12 @@ type Admin struct {
 }
 
 type AdminPublic struct {
-	ID                 int
-	Nickname, Position string
-	JoinDate           time.Time
+	ID                       int
+	Nickname, Position, Uuid string
+	JoinDate                 time.Time
+}
+
+type AdminsPaginated struct {
+	Limit, TotalCount int
+	Admins            []AdminPublic
 }

@@ -6,6 +6,18 @@ import (
 )
 
 type AdminsDomain interface {
+	CreateInviteToken(c context.Context, adminUuid string, positionID int) (token string, err error)
+
+	RegisterAdmin(c context.Context, adminData entities.AdminCreate) (id int, err error)
+
+	LoginAdmin(c context.Context, nickname, password string) (jwt string, err error)
+
+	GetAdminByID(c context.Context, id int) (admin entities.AdminPublic, err error)
+	GetAdminByUuid(c context.Context, uuid string) (admin entities.AdminPublic, err error)
+	GetAdminsPaginated(c context.Context, offset, limit int64) (admins entities.AdminsPaginated, err error)
+
+	DeleteAdminByID(c context.Context, id int) (err error)
+	DeleteAdminByUuid(c context.Context, uuid string) (err error)
 }
 
 type MembersDomain interface {

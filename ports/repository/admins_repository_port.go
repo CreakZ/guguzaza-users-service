@@ -6,11 +6,14 @@ import (
 )
 
 type AdminsRepositoryPort interface {
-	RegisterAdminUser(c context.Context, adminData models.AdminRegister) (id int, err error)
+	CheckAdminNicknameUniqueness(c context.Context, nickname string) (unique bool, err error)
+	RegisterAdmin(c context.Context, adminData models.AdminRegister) (id int, err error)
 
-	GetAdminUserById(c context.Context, id int) (admin models.Admin, err error)
-	GetAdminUserPasswordByNickname(c context.Context, nickname string) (password string, err error)
-	GetAdminUsersPaginated(c context.Context, offset, limit int64) []models.Admin
+	GetAdminByID(c context.Context, id int) (admin models.AdminPublic, err error)
+	GetAdminByUuid(c context.Context, uuid string) (admin models.AdminPublic, err error)
+	GetAdminUserBaseByNickname(c context.Context, nickname string) (adminBase models.UserBase, err error)
+	GetAdminsPaginated(c context.Context, offset, limit int64) (admins models.AdminsPaginated, err error)
 
-	DeleteAdminUser(c context.Context)
+	DeleteAdminByID(c context.Context, id int) (err error)
+	DeleteAdminByUuid(c context.Context, uuid string) (err error)
 }
