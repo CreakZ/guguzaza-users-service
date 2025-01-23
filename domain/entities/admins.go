@@ -17,6 +17,6 @@ type AdminPublic struct {
 }
 
 type AdminsPaginated struct {
-	Limit, TotalCount int
+	Limit, TotalPages int
 	Admins            []AdminPublic
 }

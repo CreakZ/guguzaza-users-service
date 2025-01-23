@@ -15,3 +15,17 @@ type MembersHandlers interface {
 
 	DeleteMember(c echo.Context) error
 }
+
+type AdminsHandlers interface {
+	CreateInviteToken(c echo.Context) error
+
+	RegisterAdmin(c echo.Context) error
+
+	LoginAdmin(c echo.Context) error
+
+	GetAdminByID(c echo.Context) error
+	GetAdminByUuid(c echo.Context) error
+	GetAdminsPaginated(c echo.Context) error
+
+	DeleteAdmin(c echo.Context) error
+}

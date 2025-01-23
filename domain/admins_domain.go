@@ -84,7 +84,12 @@ func (ad adminsDomain) RegisterAdmin(c context.Context, adminData entities.Admin
 		JoinDate:   time.Now(),
 	}
 
-	return ad.adminsRepo.RegisterAdmin(c, adminDataModel)
+	id, err = ad.adminsRepo.RegisterAdmin(c, adminDataModel)
+	if err == nil {
+		ad.inviteTokensUtil.DeleteToken(context.Background(), adminData.InviteToken)
+	}
+
+	return id, err
 }
 
 func (ad adminsDomain) LoginAdmin(c context.Context, nickname, password string) (jwt string, err error) {
@@ -125,7 +130,9 @@ func (ad adminsDomain) GetAdminsPaginated(c context.Context, offset, limit int64
 		return entities.AdminsPaginated{}, err
 	}
 
-	return converters.AdminsPaginatedFromModelToEntity(adminsPaginatedModel), nil
+	totalPages := adminsPaginatedModel.TotalCount/admins.Limit + 1
+
+	return converters.AdminsPaginatedFromModelToEntity(adminsPaginatedModel, totalPages), nil
 }
 
 func (ad adminsDomain) DeleteAdminByID(c context.Context, id int) (err error) {
