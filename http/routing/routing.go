@@ -18,4 +18,5 @@ func InitRouting(
 
 	InitMembersRouting(memberGroup, db, jwtUtil)
 	InitAdminsRouting(admGroup, db, jwtUtil, tokensUtil)
+	InitGeneralRouting(e, db, jwtUtil, tokensUtil)
 }

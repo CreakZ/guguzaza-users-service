@@ -17,11 +17,8 @@ func InitMembersRouting(e *echo.Group, db *sql.DB, jwtUtil token_ports.JwtUtilPo
 
 	e.POST("", membersHandlers.RegisterMember)
 
-	e.POST("/login", membersHandlers.LoginMember)
-
 	e.GET("/:id", membersHandlers.GetMemberByID)
 	e.GET("", membersHandlers.GetMembersPaginated)
-	e.GET("/amount", membersHandlers.GetTotalMembers)
 
 	e.PATCH("/:id", membersHandlers.UpdateMember)
 

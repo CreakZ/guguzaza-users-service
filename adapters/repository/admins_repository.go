@@ -80,11 +80,16 @@ func (ar adminsRepository) GetAdminByID(c context.Context, id int) (admin models
 
 	row := ar.db.QueryRowContext(c, query, args...)
 	err = row.Scan(&admin.ID, &admin.Nickname, &admin.Uuid, &admin.JoinDate, &admin.Position)
-	if err != nil {
-		return models.AdminPublic{}, err
+	if err == nil {
+		return admin, nil
 	}
 
-	return admin, nil
+	switch err {
+	case sql.ErrNoRows:
+		return models.AdminPublic{}, errors.New("пользователь не найден")
+	default:
+		return models.AdminPublic{}, err
+	}
 }
 
 func (ar adminsRepository) GetAdminByUuid(c context.Context, uuid string) (admin models.AdminPublic, err error) {
@@ -101,11 +106,16 @@ func (ar adminsRepository) GetAdminByUuid(c context.Context, uuid string) (admin
 
 	row := ar.db.QueryRowContext(c, query, args...)
 	err = row.Scan(&admin.ID, &admin.Nickname, &admin.Uuid, &admin.JoinDate, &admin.Position)
-	if err != nil {
-		return models.AdminPublic{}, err
+	if err == nil {
+		return admin, nil
 	}
 
-	return admin, nil
+	switch err {
+	case sql.ErrNoRows:
+		return models.AdminPublic{}, errors.New("пользователь не найден")
+	default:
+		return models.AdminPublic{}, err
+	}
 }
 
 func (ar adminsRepository) GetAdminUserBaseByNickname(c context.Context, nickname string) (adminBase models.UserBase, err error) {
@@ -132,12 +142,11 @@ func (ar adminsRepository) GetAdminUserBaseByNickname(c context.Context, nicknam
 }
 
 func (ar adminsRepository) GetAdminsPaginated(c context.Context, offset, limit int64) (admins models.AdminsPaginated, err error) {
-	admins.Admins = make([]models.AdminPublic, 0, limit)
 	admins.Limit = int(limit)
 
 	query, args, err := sq.
 		Select("a.id", "a.nickname", "p.position", "a.admin_uuid", "a.join_date", "COUNT(*) OVER() AS total_count").
-		From("admins").
+		From("admins a").
 		Join("positions p ON a.position_id = p.id").
 		Limit(uint64(limit)).
 		Offset(uint64(offset)).
@@ -146,6 +155,8 @@ func (ar adminsRepository) GetAdminsPaginated(c context.Context, offset, limit i
 	if err != nil {
 		return models.AdminsPaginated{}, err
 	}
+
+	fmt.Println(offset, limit)
 
 	rows, err := ar.db.QueryContext(c, query, args...)
 	if err != nil {

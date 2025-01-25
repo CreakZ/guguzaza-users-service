@@ -1,7 +1,11 @@
 package dto
 
-type UserBase struct {
+type Credentials struct {
 	Nickname string `json:"nickname"`
 	Password string `json:"password"`
-	Uuid     string `json:"uuid"`
+}
+
+type UserBase struct {
+	Credentials
+	Uuid string `json:"uuid"`
 }

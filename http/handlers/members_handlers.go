@@ -2,14 +2,12 @@ package handlers
 
 import (
 	"context"
-	"fmt"
 	"guguzaza-users/converters"
 	"guguzaza-users/domain"
 	"guguzaza-users/domain/entities"
 	"guguzaza-users/http/dto"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/labstack/echo/v4"
 )
@@ -46,26 +44,6 @@ func (mh *memberHandlers) RegisterMember(c echo.Context) error {
 	})
 }
 
-func (mh *memberHandlers) LoginMember(c echo.Context) error {
-	// Uuid field is ignored in this case
-	// Only 'nickname' and 'password' fields are in use
-	userBaseDto := new(dto.UserBase)
-	if err := c.Bind(userBaseDto); err != nil {
-		return c.JSON(http.StatusBadRequest, echo.Map{"message": fmt.Sprintf("ошибка: %s", err.Error())})
-	}
-
-	jwt, err := mh.domain.LoginMember(
-		context.Background(),
-		userBaseDto.Nickname,
-		userBaseDto.Password,
-	)
-	if err != nil {
-		return c.JSON(http.StatusUnauthorized, echo.Map{"message": fmt.Sprintf("ошибка: %s", err.Error())})
-	}
-
-	return c.JSON(http.StatusCreated, echo.Map{"jwt": jwt})
-}
-
 func (mh *memberHandlers) GetMemberByID(c echo.Context) error {
 	idStr := c.Param("id")
 	if idStr == "" {
@@ -75,8 +53,7 @@ func (mh *memberHandlers) GetMemberByID(c echo.Context) error {
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, echo.Map{
-			"message": "параметр 'id' неверный",
-			"error":   err.Error(),
+			"message": "параметр 'id' приведен в неверном формате",
 		})
 	}
 
@@ -88,30 +65,37 @@ func (mh *memberHandlers) GetMemberByID(c echo.Context) error {
 	return c.JSON(http.StatusOK, converters.MemberPublicFromEntityToDto(memberEntity))
 }
 
-// Mocked for now. Gotta make correct pagination
 func (mh *memberHandlers) GetMembersPaginated(c echo.Context) error {
-	return c.JSON(http.StatusOK, echo.Map{"members": []dto.MemberPublic{
-		{
-			ID:       1,
-			Nickname: "некита_1487",
-			Uuid:     "no-uuid-1",
-			JoinTime: dto.JoinTime{
-				Time: time.Date(2006, time.October, 25, 0, 0, 0, 0, time.Local),
-			},
-			Sex:   "не было",
-			About: "didnbehdt",
-		},
-		{
-			ID:       2,
-			Nickname: "федот_филиппов",
-			Uuid:     "no-uuid-2",
-			JoinTime: dto.JoinTime{
-				Time: time.Date(2005, time.December, 5, 0, 0, 0, 0, time.Local),
-			},
-			Sex:   "не было",
-			About: "Мы не похожи, ты не ловишь мой вайб Baby Im so high и меня несёт в Рай",
-		},
-	}})
+	queryParams := c.QueryParams()
+
+	if !queryParams.Has("page") {
+		return c.JSON(http.StatusBadRequest, echo.Map{"message": "параметр 'page' отсутствует"})
+	}
+
+	if !queryParams.Has("limit") {
+		return c.JSON(http.StatusBadRequest, echo.Map{"message": "параметр 'limit' отсутствует"})
+	}
+
+	page, err := strconv.Atoi(queryParams.Get("page"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{"message": "параметр 'page' приведен в некорректном формате"})
+	}
+
+	limit, err := strconv.Atoi(queryParams.Get("limit"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{"message": "параметр 'limit' приведен в некорректном формате"})
+	}
+
+	members, err := mh.domain.GetMembersPaginated(context.Background(), page, limit)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"message": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"limit":   limit,
+		"page":    page,
+		"members": members,
+	})
 }
 
 func (mh *memberHandlers) GetTotalMembers(c echo.Context) error {
@@ -132,8 +116,7 @@ func (mh *memberHandlers) UpdateMember(c echo.Context) error {
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, echo.Map{
-			"message": "параметр 'id' неверный",
-			"error":   err.Error(),
+			"message": "параметр 'id' приведен в неверном формате",
 		})
 	}
 

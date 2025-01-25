@@ -1,7 +1,6 @@
-package validation_test
+package validation
 
 import (
-	"guguzaza-users/domain/validation"
 	"testing"
 )
 
@@ -47,7 +46,7 @@ func TestCheckNicknameValidity(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		valid, _ := validation.CheckNicknameValidity(tt.value)
+		valid, _ := checkNicknameValidity(tt.value)
 		if valid != tt.valid {
 			t.Errorf("ошибка на никнейме \"%s\": ожидалось %t, на деле %t \n", tt.value, tt.valid, valid)
 		}
@@ -75,7 +74,7 @@ func TestCheckPasswordValidity(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		valid, errMsg := validation.CheckPasswordValidity(tt.value)
+		valid, errMsg := checkPasswordValidity(tt.value)
 		if valid != tt.valid {
 			t.Errorf("ошибка на пароле \"%s\": ожидалось %t, на деле %t \n", tt.value, tt.valid, valid)
 			if !valid {
@@ -106,7 +105,7 @@ func TestCheckSexValidity(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		valid, errMsg := validation.CheckSexValidity(tt.value)
+		valid, errMsg := checkSexValidity(tt.value)
 		if valid != tt.valid {
 			t.Errorf("ошибка на \"%s\": ожидалось %t, на деле %t \n", tt.value, tt.valid, valid)
 			if !valid {
@@ -133,7 +132,7 @@ func TestCheckAboutValidity(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		valid, errMsg := validation.CheckAboutValidity(tt.value)
+		valid, errMsg := checkAboutValidity(tt.value)
 		if valid != tt.valid {
 			t.Errorf("ошибка на \"%s\": ожидалось %t, на деле %t \n", tt.value, tt.valid, valid)
 			if !valid {

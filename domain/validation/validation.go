@@ -2,6 +2,7 @@ package validation
 
 import (
 	"fmt"
+	"guguzaza-users/domain/entities"
 	"strings"
 )
 
@@ -37,7 +38,7 @@ func nicknameRequirementsFunc(r rune) bool {
 	return !validRune
 }
 
-func CheckNicknameValidity(nickname string) (valid bool, errMsg string) {
+func checkNicknameValidity(nickname string) (valid bool, errMsg string) {
 	if len(nickname) < 2 || len(nickname) > 50 {
 		return false, fmt.Sprintf("длина никнейма должна составлять от 2 до 50 символов, длина текущего: %d", len(nickname))
 	}
@@ -66,7 +67,7 @@ func passwordRequirementsFunc(r rune) bool {
 	return !validRune
 }
 
-func CheckPasswordValidity(password string) (valid bool, errMsg string) {
+func checkPasswordValidity(password string) (valid bool, errMsg string) {
 	if len(password) < 8 || len(password) > 50 {
 		return false, fmt.Sprintf("длина пароля должна составлять от 8 до 50 символов, длина текущего: %d", len(password))
 	}
@@ -112,7 +113,7 @@ func CheckPasswordValidity(password string) (valid bool, errMsg string) {
 // SEX REQUIREMENTS:
 // sex should be "a" to "f" (lexicographically) string
 
-func CheckSexValidity(sex string) (valid bool, errMsg string) {
+func checkSexValidity(sex string) (valid bool, errMsg string) {
 	switch sex {
 	case "a", "b", "c", "d", "e", "f":
 		return true, ""
@@ -124,10 +125,41 @@ func CheckSexValidity(sex string) (valid bool, errMsg string) {
 // ABOUT REQUIREMENTS:
 // about length should be less or equal than 100 characters
 
-func CheckAboutValidity(about string) (valid bool, errMsg string) {
+func checkAboutValidity(about string) (valid bool, errMsg string) {
 	if len(about) > 100 {
-		return false, fmt.Sprintf("длина поля \"О себе\" не должна превышать 100 символов, длина текущего: %d", len(about))
+		return false, fmt.Sprintf("длина поля 'О себе' не должна превышать 100 символов, длина текущего: %d", len(about))
 	}
 
 	return true, ""
+}
+
+func validateCredentials(nickname, password string) (valid bool, errMsg string) {
+	valid, errMsg = checkNicknameValidity(nickname)
+	if !valid {
+		return false, errMsg
+	}
+
+	return checkPasswordValidity(password)
+}
+
+func validateSexAbout(sex, about string) (valid bool, errMsg string) {
+	valid, errMsg = checkSexValidity(sex)
+	if !valid {
+		return false, errMsg
+	}
+
+	return checkAboutValidity(about)
+}
+
+func ValidateMemberCreate(member entities.MemberCreate) (valid bool, errMsg string) {
+	valid, errMsg = validateCredentials(member.Nickname, member.Password)
+	if !valid {
+		return false, errMsg
+	}
+
+	return validateSexAbout(member.Sex, member.About)
+}
+
+func ValidateAdminCreate(admin entities.AdminCreate) (valid bool, errMsg string) {
+	return validateCredentials(admin.Nickname, admin.Password)
 }

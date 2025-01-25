@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"guguzaza-users/converters"
 	"guguzaza-users/domain"
-	"guguzaza-users/http/cookies"
 	"guguzaza-users/http/dto"
 	"net/http"
 	"strconv"
@@ -50,28 +49,6 @@ func (ah adminsHandlers) RegisterAdmin(c echo.Context) error {
 	})
 
 	return c.JSON(http.StatusCreated, echo.Map{"message": "администратор создан успешно"})
-}
-
-func (ah adminsHandlers) LoginAdmin(c echo.Context) error {
-	creds := new(struct {
-		Nickname string `json:"nickname"`
-		Password string `json:"password"`
-	})
-
-	if err := c.Bind(creds); err != nil {
-		return c.JSON(http.StatusBadRequest, echo.Map{
-			"message": fmt.Sprintf("что-то пошло не так: %s", err.Error()),
-		})
-	}
-
-	jwt, err := ah.adminsDomain.LoginAdmin(context.Background(), creds.Nickname, creds.Password)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, echo.Map{"message": err.Error()})
-	}
-
-	c.SetCookie(cookies.NewJwtCookie(jwt))
-
-	return c.JSON(http.StatusCreated, echo.Map{"message": "вход успешный"})
 }
 
 func (ah adminsHandlers) GetAdminByID(c echo.Context) error {
@@ -129,7 +106,7 @@ func (ah adminsHandlers) GetAdminsPaginated(c echo.Context) error {
 
 	admins, err := ah.adminsDomain.GetAdminsPaginated(
 		context.Background(),
-		int64(page*limit),
+		int64(page),
 		int64(limit),
 	)
 	if err != nil {

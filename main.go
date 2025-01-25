@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"database/sql"
 	"fmt"
+	"guguzaza-users/adapters/repository"
 	"guguzaza-users/adapters/tokens"
 	"guguzaza-users/http/routing"
 	"time"
@@ -30,10 +31,9 @@ func main() {
 	}
 
 	jwtUtil := tokens.NewJwtUtil(time.Second*10, key)
+	tokensUtil := tokens.NewInviteTokensUtil(repository.NewInviteTokensRepository(db))
 
-	routing.InitRouting(e, db, jwtUtil)
-
-	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{}))
+	routing.InitRouting(e, db, jwtUtil, tokensUtil)
 
 	if err := e.Start(":8080"); err != nil {
 		panic(fmt.Errorf("error while starting the server: %w", err))

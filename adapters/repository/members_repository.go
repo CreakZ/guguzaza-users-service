@@ -89,6 +89,9 @@ func (mr *membersRepository) GetMemberUserBaseByNickname(c context.Context, nick
 
 	row := mr.db.QueryRowContext(c, query, args...)
 	if err = row.Scan(&memberBase.Nickname, &memberBase.Password, &memberBase.Uuid); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return models.UserBase{}, fmt.Errorf("пользователь не существует")
+		}
 		return models.UserBase{}, err
 	}
 
@@ -98,7 +101,7 @@ func (mr *membersRepository) GetMemberUserBaseByNickname(c context.Context, nick
 // change models.Member to models.MemberPublic
 func (mr *membersRepository) GetMemberByID(c context.Context, id int) (member models.MemberPublic, err error) {
 	query, args, err := sq.
-		Select("id", "nickname", "member_uuid", "join_date", "sex", "about"). // password is skipped intentionally
+		Select("id", "nickname", "member_uuid", "join_date", "sex", "about").
 		From("members").
 		Where(sq.Eq{"id": id}).
 		PlaceholderFormat(sq.Dollar).
@@ -109,11 +112,16 @@ func (mr *membersRepository) GetMemberByID(c context.Context, id int) (member mo
 
 	row := mr.db.QueryRowContext(c, query, args...)
 	err = row.Scan(&member.ID, &member.Nickname, &member.Uuid, &member.JoinDate, &member.Sex, &member.About)
-	if err != nil {
-		return models.MemberPublic{}, err
+	if err == nil {
+		return
 	}
 
-	return member, nil
+	switch err {
+	case sql.ErrNoRows:
+		return models.MemberPublic{}, errors.New("пользователь не существует")
+	default:
+		return models.MemberPublic{}, err
+	}
 }
 
 func (mr *membersRepository) GetMemberIDByUuid(c context.Context, uuid string) (id int, err error) {
@@ -151,8 +159,8 @@ func (mr *membersRepository) GetMembersPaginated(c context.Context, offset, limi
 		return members, err
 	}
 
-	member := models.MemberPublic{}
 	for rows.Next() {
+		member := models.MemberPublic{}
 		err = rows.Scan(&member.ID, &member.Nickname, &member.Uuid, &member.JoinDate, &member.Sex, &member.About)
 		if err != nil {
 			return []models.MemberPublic{}, err

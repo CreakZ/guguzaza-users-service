@@ -29,12 +29,7 @@ func NewMembersDomain(membersPort repo_ports.MembersRepositoryPort, jwtUtil toke
 }
 
 func (md *membersDomain) RegisterMember(c context.Context, memberData entities.MemberCreate) (id int, err error) {
-	valid, errMsg := validation.CheckNicknameValidity(memberData.Nickname)
-	if !valid {
-		return 0, errors.New(errMsg)
-	}
-
-	valid, errMsg = validation.CheckPasswordValidity(memberData.Password)
+	valid, errMsg := validation.ValidateMemberCreate(memberData)
 	if !valid {
 		return 0, errors.New(errMsg)
 	}
@@ -84,13 +79,22 @@ func (md *membersDomain) GetMemberByID(c context.Context, id int) (member entiti
 	return converters.MemberPublicFromModelToEntity(memberModel), nil
 }
 
-func (md *membersDomain) GetMembersPaginated(c context.Context, offset, limit int) (members []entities.MemberPublic, err error) {
+func (md *membersDomain) GetMembersPaginated(c context.Context, page, limit int) (members []entities.MemberPublic, err error) {
+	if page < 1 {
+		return []entities.MemberPublic{}, errors.New("значение 'page' не должно быть меньше 1")
+	}
+
+	if limit < 10 || limit > 50 {
+		return []entities.MemberPublic{}, errors.New("значение 'limit' не должно быть в диапазоне от 10 до 50 (включительно)")
+	}
+
+	offset := (page - 1) * limit
 	membersEntity, err := md.membersPort.GetMembersPaginated(c, offset, limit)
 	if err != nil {
 		return members, err
 	}
 
-	members = make([]entities.MemberPublic, len(membersEntity))
+	members = make([]entities.MemberPublic, 0, len(membersEntity))
 	for _, member := range membersEntity {
 		members = append(members, converters.MemberPublicFromModelToEntity(member))
 	}

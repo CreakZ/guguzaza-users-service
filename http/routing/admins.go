@@ -21,7 +21,6 @@ func InitAdminsRouting(
 	adminsHandlers := handlers.NewAdminsHandlers(adminsDomain)
 
 	e.POST("", adminsHandlers.RegisterAdmin)
-	e.POST("/login", adminsHandlers.LoginAdmin)
 	e.GET("/:id", adminsHandlers.GetAdminByID)
 	e.GET("/me", adminsHandlers.GetAdminByUuid)
 	e.GET("", adminsHandlers.GetAdminsPaginated)

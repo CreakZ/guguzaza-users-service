@@ -50,12 +50,7 @@ func (ad adminsDomain) RegisterAdmin(c context.Context, adminData entities.Admin
 		return 0, err
 	}
 
-	valid, errMsg := validation.CheckNicknameValidity(adminData.Nickname)
-	if !valid {
-		return 0, errors.New(errMsg)
-	}
-
-	valid, errMsg = validation.CheckPasswordValidity(adminData.Password)
+	valid, errMsg := validation.ValidateAdminCreate(adminData)
 	if !valid {
 		return 0, errors.New(errMsg)
 	}
@@ -124,13 +119,22 @@ func (ad adminsDomain) GetAdminByUuid(c context.Context, uuid string) (admin ent
 	return converters.AdminPublicFromModelToEntity(adminModel), nil
 }
 
-func (ad adminsDomain) GetAdminsPaginated(c context.Context, offset, limit int64) (admins entities.AdminsPaginated, err error) {
+func (ad adminsDomain) GetAdminsPaginated(c context.Context, page, limit int64) (admins entities.AdminsPaginated, err error) {
+	if page < 1 {
+		return entities.AdminsPaginated{}, errors.New("значение 'page' не должно быть меньше 1")
+	}
+
+	if limit < 10 || limit > 50 {
+		return entities.AdminsPaginated{}, errors.New("значение 'limit' не должно быть в диапазоне от 10 до 50 (включительно)")
+	}
+
+	offset := (page - 1) * limit
 	adminsPaginatedModel, err := ad.adminsRepo.GetAdminsPaginated(c, offset, limit)
 	if err != nil {
 		return entities.AdminsPaginated{}, err
 	}
 
-	totalPages := adminsPaginatedModel.TotalCount/admins.Limit + 1
+	totalPages := adminsPaginatedModel.TotalCount/adminsPaginatedModel.Limit + 1
 
 	return converters.AdminsPaginatedFromModelToEntity(adminsPaginatedModel, totalPages), nil
 }
