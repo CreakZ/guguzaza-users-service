@@ -5,12 +5,19 @@ import (
 	"guguzaza-users/adapters/repository"
 	"guguzaza-users/domain"
 	"guguzaza-users/http/handlers"
+	"guguzaza-users/http/middleware"
 	ports "guguzaza-users/ports/tokens"
 
 	"github.com/labstack/echo/v4"
 )
 
-func InitGeneralRouting(e *echo.Echo, db *sql.DB, jwtUtil ports.JwtUtilPort, tokensUtil ports.InviteTokensUtilPort) {
+func InitGeneralRouting(
+	e *echo.Echo,
+	db *sql.DB,
+	middleware middleware.Middleware,
+	jwtUtil ports.JwtUtilPort,
+	tokensUtil ports.InviteTokensUtilPort,
+) {
 	membersRepo := repository.NewMembersRepository(db)
 	adminsRepo := repository.NewAdminsRepository(db)
 
@@ -21,8 +28,8 @@ func InitGeneralRouting(e *echo.Echo, db *sql.DB, jwtUtil ports.JwtUtilPort, tok
 
 	loginGroup := e.Group("/login")
 
-	loginGroup.POST("/members", generalHandlers.LoginMember)
-	loginGroup.POST("/admins", generalHandlers.LoginAdmin)
+	loginGroup.POST("/members", generalHandlers.LoginMember, middleware.ContentTypeMiddleware)
+	loginGroup.POST("/admins", generalHandlers.LoginAdmin, middleware.ContentTypeMiddleware)
 
 	e.GET("/stats", generalHandlers.Stats)
 }
