@@ -1,0 +1,10 @@
+[postgres]
+host='localhost'
+port=5432
+user='postgres'
+password=''
+dbname='mydb'
+enable_ssl=false
+
+[jwt]
+expiration=604800 # 7 days
