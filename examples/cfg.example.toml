@@ -6,5 +6,10 @@ password=''
 dbname='mydb'
 enable_ssl=false
 
+[frontend]
+origins = [
+    'http://localhost:3000'
+]
+
 [jwt]
-expiration=604800 # 7 days
+expiration = 604800

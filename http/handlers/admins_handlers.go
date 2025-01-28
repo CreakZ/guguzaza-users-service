@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"guguzaza-users/converters"
 	"guguzaza-users/domain"
+	"guguzaza-users/http/cookies"
 	"guguzaza-users/http/dto"
 	"net/http"
 	"strconv"
@@ -14,11 +15,13 @@ import (
 
 type adminsHandlers struct {
 	adminsDomain domain.AdminsDomain
+	cooker       cookies.Cooker
 }
 
-func NewAdminsHandlers(adminsDomain domain.AdminsDomain) AdminsHandlers {
+func NewAdminsHandlers(adminsDomain domain.AdminsDomain, cooker cookies.Cooker) AdminsHandlers {
 	return adminsHandlers{
 		adminsDomain: adminsDomain,
+		cooker:       cooker,
 	}
 }
 
@@ -40,13 +43,7 @@ func (ah adminsHandlers) RegisterAdmin(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, echo.Map{"message": err.Error()})
 	}
 
-	c.SetCookie(&http.Cookie{
-		Name:     "id",
-		Value:    strconv.Itoa(id),
-		MaxAge:   0,
-		Secure:   true,
-		HttpOnly: true,
-	})
+	c.SetCookie(ah.cooker.NewIDCookie(id))
 
 	return c.JSON(http.StatusCreated, echo.Map{"message": "администратор создан успешно"})
 }

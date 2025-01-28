@@ -5,6 +5,7 @@ import (
 	"guguzaza-users/converters"
 	"guguzaza-users/domain"
 	"guguzaza-users/domain/entities"
+	"guguzaza-users/http/cookies"
 	"guguzaza-users/http/dto"
 	"net/http"
 	"strconv"
@@ -14,11 +15,13 @@ import (
 
 type memberHandlers struct {
 	domain domain.MembersDomain
+	cooker cookies.Cooker
 }
 
-func NewMembersHandlers(domain domain.MembersDomain) MembersHandlers {
+func NewMembersHandlers(domain domain.MembersDomain, cooker cookies.Cooker) MembersHandlers {
 	return &memberHandlers{
 		domain: domain,
+		cooker: cooker,
 	}
 }
 
@@ -38,8 +41,9 @@ func (mh *memberHandlers) RegisterMember(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, echo.Map{"message": err.Error()})
 	}
 
+	c.SetCookie(mh.cooker.NewIDCookie(id))
+
 	return c.JSON(http.StatusCreated, echo.Map{
-		"id":      id,
 		"message": "пользователь создан успешно",
 	})
 }

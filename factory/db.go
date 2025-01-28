@@ -6,20 +6,20 @@ import (
 	"guguzaza-users/factory/config"
 )
 
-func NewDB(cfg *config.Cfg) *sql.DB {
+func NewDB(cfg *config.PsqlCfg) *sql.DB {
 	sslmode := "disable"
-	if cfg.Postgres.EnableSSL {
+	if cfg.EnableSSL {
 		sslmode = "enable"
 	}
 
 	db, err := sql.Open(
 		"postgres",
 		fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
-			cfg.Postgres.Host,
-			cfg.Postgres.Port,
-			cfg.Postgres.User,
-			cfg.Postgres.Password,
-			cfg.Postgres.DBname,
+			cfg.Host,
+			cfg.Port,
+			cfg.User,
+			cfg.Password,
+			cfg.DBname,
 			sslmode,
 		),
 	)

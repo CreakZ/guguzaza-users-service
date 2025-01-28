@@ -1,1 +1,7 @@
 static/
+
+# secret key
+secret.key
+
+# configuration toml file
+cfg.toml

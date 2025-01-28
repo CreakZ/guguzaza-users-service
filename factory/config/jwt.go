@@ -1,5 +1,5 @@
 package config
 
-type Jwt struct {
+type JwtCfg struct {
 	Expiration int `toml:"expiration"` // expiration is measured in seconds
 }

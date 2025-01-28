@@ -9,9 +9,9 @@ import (
 )
 
 type Cfg struct {
-	Postgres *PsqlCfg `toml:"postgres"`
-	Jwt      *Jwt     `toml:"jwt"`
-	// Frontend *FrontendCfg `toml:"frontend"`
+	Postgres *PsqlCfg     `toml:"postgres"`
+	Jwt      *JwtCfg      `toml:"jwt"`
+	Frontend *FrontendCfg `toml:"frontend"`
 }
 
 func NewConfig() (cfg *Cfg) {

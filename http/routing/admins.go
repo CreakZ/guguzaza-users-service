@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"guguzaza-users/adapters/repository"
 	"guguzaza-users/domain"
+	"guguzaza-users/http/cookies"
 	"guguzaza-users/http/handlers"
 	"guguzaza-users/http/middleware"
 	token_ports "guguzaza-users/ports/tokens"
@@ -17,10 +18,11 @@ func InitAdminsRouting(
 	middleware middleware.Middleware,
 	jwtUtil token_ports.JwtUtilPort,
 	tokensUtil token_ports.InviteTokensUtilPort,
+	cooker cookies.Cooker,
 ) {
 	adminsRepo := repository.NewAdminsRepository(db)
 	adminsDomain := domain.NewAdminsDomain(adminsRepo, jwtUtil, tokensUtil)
-	adminsHandlers := handlers.NewAdminsHandlers(adminsDomain)
+	adminsHandlers := handlers.NewAdminsHandlers(adminsDomain, cooker)
 
 	e.POST("", adminsHandlers.RegisterAdmin)
 	e.GET("/:id", adminsHandlers.GetAdminByID)

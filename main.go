@@ -1,11 +1,13 @@
 package main
 
 import (
-	"crypto/rand"
-	"database/sql"
 	"fmt"
 	"guguzaza-users/adapters/repository"
 	"guguzaza-users/adapters/tokens"
+	"guguzaza-users/factory"
+	"guguzaza-users/factory/config"
+	"guguzaza-users/http/cookies"
+	mw "guguzaza-users/http/middleware"
 	"guguzaza-users/http/routing"
 	"time"
 
@@ -17,25 +19,25 @@ import (
 func main() {
 	e := echo.New()
 
-	e.Use(middleware.Logger())
+	cfg := config.NewConfig()
 
-	db, err := sql.Open("postgres", "host=localhost port=5433 user=postgres password=guguzaza dbname=guguzaza sslmode=disable")
-	if err != nil {
-		panic(err)
-	}
+	db := factory.NewDB(cfg.Postgres)
 
-	key := make([]byte, 32)
-	_, err = rand.Read(key)
-	if err != nil {
-		panic(fmt.Sprintf("Ошибка генерации ключа: %v", err))
-	}
+	key := factory.NewKey()
 
-	jwtUtil := tokens.NewJwtUtil(time.Second*10, key)
+	jwtUtil := tokens.NewJwtUtil(time.Second*time.Duration(cfg.Jwt.Expiration), key)
 	tokensUtil := tokens.NewInviteTokensUtil(repository.NewInviteTokensRepository(db))
 
-	routing.InitRouting(e, db, jwtUtil, tokensUtil)
+	middleW := mw.NewMiddleware(jwtUtil)
+
+	e.Use(middleware.Logger())
+	e.Use(middleW.CorsMiddleware(cfg.Frontend))
+
+	cooker := cookies.NewCooker(cfg.Jwt)
+
+	routing.InitRouting(e, db, middleW, jwtUtil, tokensUtil, cooker)
 
 	if err := e.Start(":8080"); err != nil {
-		panic(fmt.Errorf("error while starting the server: %w", err))
+		panic(fmt.Errorf("ошибка при запуске сервера: %w", err))
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"guguzaza-users/adapters/repository"
 	"guguzaza-users/domain"
+	"guguzaza-users/http/cookies"
 	"guguzaza-users/http/handlers"
 	"guguzaza-users/http/middleware"
 	ports "guguzaza-users/ports/tokens"
@@ -17,6 +18,7 @@ func InitGeneralRouting(
 	middleware middleware.Middleware,
 	jwtUtil ports.JwtUtilPort,
 	tokensUtil ports.InviteTokensUtilPort,
+	cooker cookies.Cooker,
 ) {
 	membersRepo := repository.NewMembersRepository(db)
 	adminsRepo := repository.NewAdminsRepository(db)
@@ -24,7 +26,7 @@ func InitGeneralRouting(
 	membersDomain := domain.NewMembersDomain(membersRepo, jwtUtil)
 	adminsDomain := domain.NewAdminsDomain(adminsRepo, jwtUtil, tokensUtil)
 
-	generalHandlers := handlers.NewGeneralHandlers(adminsDomain, membersDomain)
+	generalHandlers := handlers.NewGeneralHandlers(adminsDomain, membersDomain, cooker)
 
 	loginGroup := e.Group("/login")
 

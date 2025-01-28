@@ -8,6 +8,9 @@ CREATE TABLE IF NOT EXISTS members (
   about TEXT
 );
 
+CREATE UNIQUE INDEX IF NOT EXISTS idx_members_uuid ON members (member_uuid);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_members_nickname ON members (nickname);
+
 CREATE TABLE IF NOT EXISTS positions (
   id SERIAL PRIMARY KEY,
   position TEXT
@@ -21,6 +24,9 @@ CREATE TABLE IF NOT EXISTS admins (
   position_id INTEGER NOT NULL REFERENCES positions(id),
   join_date TIMESTAMP NOT NULL
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_admins_uuid ON admins (admin_uuid);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_admins_nickname ON admins (nickname);
 
 CREATE TABLE IF NOT EXISTS invite_tokens (
   id SERIAL PRIMARY KEY,
